@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>FCM Token Generator</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
+</head>
+
+<body>
+  <h2>FCM Token :</h2>
+  <pre id="token">En attente du token...</pre>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfTyc7HCyRtSUO4bzdtxp_wH_ipNBuYOw",
+      authDomain: "ai-rh-platform.firebaseapp.com",
+      projectId: "ai-rh-platform",
+      storageBucket: "ai-rh-platform.appspot.com",
+      messagingSenderId: "960665959797",
+      appId: "1:960665959797:web:d88deeb8fa417ba2ea273c"
+    };
+
+    const tokenElement = document.getElementById("token");
+
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    async function registerAndGetToken() {
+      try {
+        if (!firebase.messaging.isSupported()) {
+          throw new Error("FCM non supporté");
+        }
+
+        const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') throw new Error("Permission refusée.");
+
+        const token = await messaging.getToken({
+          vapidKey: "BNGS7HmOE_WJeRl4dJ9iJkGdEb0ARgG0bJNzo_r0rbeM0-YPdj4Wc56eRbRl0gdhylgGRLMQMYl7fehmPwVLCM0",
+          serviceWorkerRegistration: registration
+        });
+
+        if (!token) throw new Error("Aucun token généré.");
+        tokenElement.textContent = token;
+      } catch (e) {
+        console.error("Erreur :", e);
+        tokenElement.textContent = "Erreur : " + e.message;
+      }
+    }
+
+    registerAndGetToken();
+  </script>
+</body>
+
+</html>
