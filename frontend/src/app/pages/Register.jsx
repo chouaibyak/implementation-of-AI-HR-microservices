@@ -1,44 +1,84 @@
 "use client"
 
-import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { registerWithEmailAndPassword } from '../services/auth';
+import api from '../services/api';
 
 export default function Register() {
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [formValue, setFormValue] = useState('');
-  const [error, setError] = useState('');
 
-  const inputEmailRef = useRef();
-  const inputNameRef = useRef();
-  const inputPasswordRef = useRef();
-  const recruteurTypeRef = useRef();
-  const condidatTypeRef = useRef();
+  const navigate = useNavigate()
+
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [formValue, setFormValue] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: ''
+  });
+  const [error, setError] = useState();
+
+  const postRegister = () => {
+    fetch('/register')
+      .then(res => res.json())
+      .then(res => setFormValue(res))
+  }
+
+  useEffect(() => {
+    postRegister()
+  }, [])
+
+  const handelChange = (e) => {
+    const { name, value } = e.target
+    setFormValue(prev => {
+      return { ...prev, [name]: value }
+    })
+  }
+
+  const handelRoleSelect = (role) => {
+    setSelectedRole(role)
+    setFormValue(prev => {
+      return { ...prev, role: role }
+    })
+  }
 
   const handelSubmit = (e) => {
     e.preventDefault();
 
     // Vérification des champs
-    if (!inputNameRef.current.value ||
-      !inputEmailRef.current.value ||
-      !inputPasswordRef.current.value ||
-      !selectedRole) {
+    if (!formValue.name ||
+      !formValue.email ||
+      !formValue.password ||
+      !formValue.role) {
       setError('Veuillez remplir tous les champs');
       return;
     }
 
-    setError(''); // Réinitialiser l'erreur si tout est valide
-    setFormValue({
-      email: inputEmailRef.current.value,
-      name: inputNameRef.current.value,
-      password: inputPasswordRef.current.value,
-      role: selectedRole
-    });
+    registerWithEmailAndPassword(formValue.name, formValue.email, formValue.password)
+      .then(async ({ user, idToken }) => {
+        await api.post('/register', {
+          name: formValue.name,
+          email: formValue.email,
+          role: formValue.role
+        }, {
+          headers: {
+            Authorization: `Bearer ${idToken}`
+          }
+        });
+        navigate('/login');
+      })
+      .catch(error => {
+        setError(error.message);
+      });
+
+
+    setError('');
   };
+
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       <div className="border-2 border-gray-200 rounded-lg p-8 flex flex-col w-full max-w-md bg-white shadow-sm">
-        {JSON.stringify(formValue)}
         {/* Logo/Titre */}
         <div className="text-center mb-6">
           <span className="text-2xl font-bold text-blue-600">Humain+</span>
@@ -57,28 +97,26 @@ export default function Register() {
           {/* Sélection Recruteur/Candidat */}
           <div className="flex space-x-4 mb-4">
             <button
-              type="button" // Ajout du type button pour éviter la soumission du formulaire
-              onClick={() => setSelectedRole('recruiter')}
+              type="button"
+              onClick={() => handelRoleSelect('recruiter')}
               className={`
                 flex-1 py-2 px-4 border rounded-md font-medium cursor-pointer
                 ${selectedRole === 'recruiter'
                   ? 'border-blue-500 bg-blue-50 text-blue-600'
                   : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
               `}
-              ref={recruteurTypeRef}
             >
               Recruteur
             </button>
             <button
-              type="button" // Ajout du type button pour éviter la soumission du formulaire
-              onClick={() => setSelectedRole('candidate')}
+              type="button"
+              onClick={() => handelRoleSelect('candidate')}
               className={`
                 flex-1 py-2 px-4 border rounded-md font-medium cursor-pointer
                 ${selectedRole === 'candidate'
                   ? 'border-blue-500 bg-blue-50 text-blue-600'
                   : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
               `}
-              ref={condidatTypeRef}
             >
               Candidat
             </button>
@@ -90,9 +128,11 @@ export default function Register() {
             <input
               type="text"
               id="name"
+              name="name"  // Added name attribute
               placeholder="username"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              ref={inputNameRef}
+              value={formValue.name}
+              onChange={handelChange}
             />
           </div>
 
@@ -102,9 +142,11 @@ export default function Register() {
             <input
               type="email"
               id="email"
+              name="email"  // Added name attribute
               placeholder="votre@email.com"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              ref={inputEmailRef}
+              value={formValue.email}
+              onChange={handelChange}
             />
           </div>
 
@@ -114,9 +156,11 @@ export default function Register() {
             <input
               type="password"
               id="password"
+              name="password"  // Added name attribute
               placeholder="••••••••"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              ref={inputPasswordRef}
+              value={formValue.password}
+              onChange={handelChange}
             />
           </div>
 

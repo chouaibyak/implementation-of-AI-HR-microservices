@@ -1,28 +1,31 @@
-import { auth } from '../firebase';
 import {
   createUserWithEmailAndPassword,
+  updateProfile,
   signInWithEmailAndPassword,
   signOut
-} from 'firebase/auth';
+} from "firebase/auth";
+import { auth } from "../firebase";
 
-export const register = async (email, password) => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  } catch (error) {
-    throw error;
-  }
+export const registerWithEmailAndPassword = async (name, email, password) => {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  await updateProfile(userCredential.user, { displayName: name });
+  const idToken = await userCredential.user.getIdToken();
+  return { user: userCredential.user, idToken };
 };
 
-export const login = async (email, password) => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  } catch (error) {
-    throw error;
-  }
+export const loginWithEmailAndPassword = async (email, password) => {
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const idToken = await userCredential.user.getIdToken();
+  return { user: userCredential.user, idToken };
 };
 
-export const logout = async () => {
-  await signOut(auth);
+export const signOutUser = async () => {
+  try {
+    await signOut(auth);  // Appel à la méthode Firebase signOut pour déconnecter l'utilisateur
+    console.log("Utilisateur déconnecté avec succès");
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la déconnexion", error);
+    return { success: false, error: error.message };
+  }
 };

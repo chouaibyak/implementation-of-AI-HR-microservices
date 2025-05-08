@@ -3,8 +3,10 @@ import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from functools import wraps
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app) 
 
 # Initialise Firebase
 try:
@@ -30,27 +32,37 @@ def verify_token(f):
             return jsonify({'error': 'Token invalide ou expiré', 'details': str(e)}), 401
     return wrapper
 
-# Inscription
+# Register
 @app.route('/register', methods=['POST'])
+@verify_token  # ← assure que le token est valide
 def register():
     data = request.get_json()
+    uid = request.user['uid']  # récupéré depuis le token
     try:
-        user = auth.create_user(
-            email=data['email'],
-            password=data['password'],
-            display_name=data.get('name', '')
-        )
         user_data = {
-            'uid': user.uid,
-            'email': user.email,
-            'name': user.display_name,
+            'uid': uid,
+            'email': data['email'],
+            'name': data.get('name', ''),
             'role': data.get('role', 'candidat'),
             'createdAt': firestore.SERVER_TIMESTAMP
         }
-        db.collection('users').document(user.uid).set(user_data)
-        return jsonify({'message': 'Utilisateur créé et enregistré', 'uid': user.uid}), 201
+        db.collection('users').document(uid).set(user_data)
+        return jsonify({'message': 'Utilisateur enregistré dans Firestore'}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+    
+#Login
+@app.route('/login-info', methods=['GET'])
+@verify_token
+def login_info():
+    uid = request.user['uid']
+    user_doc = db.collection('users').document(uid).get()
+    if user_doc.exists:
+        return jsonify(user_doc.to_dict()), 200
+    else:
+        return jsonify({'error': 'Utilisateur non trouvé dans Firestore'}), 404
+
+
 
 # Vérifier le token manuellement
 @app.route('/verify', methods=['POST'])
@@ -104,6 +116,6 @@ def protected_route():
 
 # Lancer l'application
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
 
 
