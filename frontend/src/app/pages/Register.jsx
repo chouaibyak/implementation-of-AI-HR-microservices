@@ -124,7 +124,7 @@ export default function Register() {
 
           {/* Champ Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
             <input
               type="text"
               id="name"

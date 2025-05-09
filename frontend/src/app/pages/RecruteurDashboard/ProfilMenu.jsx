@@ -13,7 +13,7 @@ import { auth } from "@/app/firebase";
 import { signOutUser } from "@/app/services/auth";
 import { useNavigate } from 'react-router-dom';
 
-export default function ProfilMenu() {
+export default function ProfilMenu({ onProfileClick }) {
 
   const [profil, setProfil] = useState(null)
   const navigate = useNavigate()
@@ -63,7 +63,7 @@ export default function ProfilMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className='cursor-pointer'>Administration</DropdownMenuItem>
+        <DropdownMenuItem className='cursor-pointer' onSelect={onProfileClick}>Profile</DropdownMenuItem>
         <DropdownMenuItem className='cursor-pointer'>Tutorials</DropdownMenuItem>
         <DropdownMenuItem className='cursor-pointer'>Documentation</DropdownMenuItem>
         <DropdownMenuItem className='cursor-pointer'>Talk to Us</DropdownMenuItem>
