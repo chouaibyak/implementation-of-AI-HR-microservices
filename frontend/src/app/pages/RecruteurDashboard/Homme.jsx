@@ -1,14 +1,28 @@
-import React from 'react';
+import api from '@/app/services/api';
+import React, { useState, useEffect } from 'react';
+
 
 export default function Homme() {
+
+  const [userinfo, setUserInfo] = useState(null);
+
+  const getUserInfo = async () => {
+    const res = await api.get('/me')
+    setUserInfo(res.data)
+  }
+
+  useEffect(() => {
+    getUserInfo()
+  }, [])
+
   return (
-    <div className='flex flex-col h-screen bg-gray-50'>
+    <div className='flex flex-col h-full p-5 '>
       {/* Main Content Section */}
-      <div className='flex-1 overflow-auto py-12'>
+      <div className='flex-1 overflow-auto'>
         {/* Header Section */}
         <div className='text-center'>
-          <h1 className='text-5xl font-bold text-gray-900 mb-4'>
-            Hello CHOUAIB YAKINE
+          <h1 className='text-5xl font-bold text-gray-900 py-15'>
+            Hello {userinfo?.name}
           </h1>
           <p className='text-lg text-gray-600 font-medium max-w-3xl mx-auto'>
             Your hiring journey starts here: Post jobs, review AI-ranked candidates, and hire faster.
@@ -45,7 +59,7 @@ export default function Homme() {
             <p className='text-lg font-semibold mb-4'>
               Want to create a new job listing?
             </p>
-            <button className='bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300'>
+            <button className='bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300 cursor-pointer'>
               Create a Job
             </button>
           </div>

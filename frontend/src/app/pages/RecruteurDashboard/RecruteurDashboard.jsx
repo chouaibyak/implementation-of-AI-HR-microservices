@@ -5,18 +5,18 @@ import ProfilPage from './ProfilPage';
 import Notificationbarre from './Notificationbarre';
 import SideBarre from './SideBarre';
 import Homme from './Homme';
+import JobForm from '@/app/components/JobForm';
 
 export default function RecruteurDashboard() {
-  const [showProfilPage, setShowProfilPage] = useState(false);
   const [showNotification, setNotification] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showSideBar, setShowSideBar] = useState(true);
-  const [showHomme, setShowHomme] = useState(true);
+  const [activePage, setActivePage] = useState("homme");
 
   return (
     <div className='h-screen flex flex-col'>
       {/* Barre de navigation */}
-      <div className='bg-blue-600 w-full h-16 flex items-center justify-between px-4'>
+      <div className='bg-blue-600 fixed top-0 left-0 w-full h-16 flex items-center justify-between px-4 z-50'>
         <div className='flex items-center space-x-3'>
           <button className='text-amber-50 cursor-pointer' onClick={() => setShowSideBar(prev => !prev)}>
             <PanelsTopLeft />
@@ -46,24 +46,27 @@ export default function RecruteurDashboard() {
             </div>
           )}
 
-          <ProfilMenu onProfileClick={() => setShowProfilPage((prev) => prev = !prev)} />
+          {/* ProfileMenu */}
+          <ProfilMenu onProfileClick={() => setActivePage("profile")} />
+
         </div>
       </div>
       {/*end Barre de navigation */}
 
       {/* Layout principal */}
       <div className="flex flex-1">
-        {showSideBar && <SideBarre />}
 
-        <div className=" p-6 overflow-y-auto absolute left-75 ">
-          {showProfilPage && <ProfilPage />}
-          {/* Tu peux afficher d'autres composants ici selon la logique */}
+        {showSideBar && <SideBarre onNavigate={setActivePage} />}
+
+        <div className=" overflow-y-auto w-full ml-64">
+          {activePage === "homme" && <Homme />}
+          {activePage === "profile" && <ProfilPage />}
+          {activePage === "jobs" && < JobForm />}
+          {activePage === "candidates" && <div>Candidates Page (placeholder)</div>}
+          {/* Ajoute d'autres pages ici selon les boutons de ta sidebar */}
         </div>
-      </div>
 
-      {
-        showHomme && <Homme />
-      }
+      </div>
 
     </div>
   );

@@ -10,6 +10,7 @@ export const registerWithEmailAndPassword = async (name, email, password) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(userCredential.user, { displayName: name });
   const idToken = await userCredential.user.getIdToken();
+  await api.post('/register', { name, email });
   return { user: userCredential.user, idToken };
 };
 
