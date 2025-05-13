@@ -1,4 +1,4 @@
-import api from '@/app/services/api';
+import api from '@/app/services/api/api';
 import React, { useState, useEffect } from 'react';
 
 

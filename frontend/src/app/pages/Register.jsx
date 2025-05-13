@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerWithEmailAndPassword } from '../services/auth';
-import api from '../services/api';
+import api from "../services/api/api";
 
 export default function Register() {
 
@@ -24,9 +24,6 @@ export default function Register() {
       .then(res => setFormValue(res))
   }
 
-  useEffect(() => {
-    postRegister()
-  }, [])
 
   const handelChange = (e) => {
     const { name, value } = e.target
@@ -169,7 +166,7 @@ export default function Register() {
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4 cursor-pointer"
             onClick={handelSubmit}
           >
-            Se connecter
+            S'inscrire
           </button>
         </div>
       </div>

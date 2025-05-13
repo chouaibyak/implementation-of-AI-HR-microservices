@@ -5,12 +5,14 @@ import google.generativeai as genai
 import PyPDF2
 import firebase_admin
 from firebase_admin import credentials, firestore
+from flask_cors import CORS
 
 # --- Chargement variables d’environnement ---
 load_dotenv()
 
 # --- Config Flask ---
 app = Flask(__name__)
+CORS(app)
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -18,7 +20,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 cred = credentials.Certificate("../../firebase/firebase_admin_key.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
-print("✅ Firebase initialisé")
+print("Firebase initialisé")
 
 # --- Config Gemini ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -34,10 +36,10 @@ def download_cv_from_cvservice(filename):
             with open(local_path, "wb") as f:
                 f.write(response.content)
             return local_path
-        print("❌ Erreur HTTP:", response.status_code)
+        print("Erreur HTTP:", response.status_code)
         return None
     except Exception as e:
-        print("❌ Erreur téléchargement:", e)
+        print("Erreur téléchargement:", e)
         return None
 
 # --- Extraction texte PDF ---
@@ -47,7 +49,7 @@ def extract_text_from_pdf(filepath):
             reader = PyPDF2.PdfReader(f)
             return ''.join(page.extract_text() or '' for page in reader.pages).strip()
     except Exception as e:
-        print("❌ Erreur PDF:", e)
+        print("Erreur PDF:", e)
         return ""
 
 # --- Appel Gemini ---
@@ -137,6 +139,7 @@ def analyze_from_cvservice():
         'parsed_analysis': parsed
     })
 
+
 # --- Lancement ---
 if __name__ == '__main__':
-    app.run(port=5001, debug=True)
+    app.run(port=5003, debug=True)

@@ -8,7 +8,7 @@ const api = axios.create({
   },
 });
 
-// Intercepteur pour ajouter le token dans chaque requête
+// Intercepteur pour ajouter le token Firebase
 api.interceptors.request.use(
   async (config) => {
     const user = auth.currentUser;
@@ -18,9 +18,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
