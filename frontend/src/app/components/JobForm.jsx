@@ -50,6 +50,7 @@ export default function JobForm() {
       const jobToSend = {
         ...jobValue,
         skills: jobValue.skills.split(',').map(s => s.trim()),
+        recruiter_id: currentUser.uid
       };
 
 

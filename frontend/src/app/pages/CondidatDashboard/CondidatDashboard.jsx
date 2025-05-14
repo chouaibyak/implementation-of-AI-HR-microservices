@@ -7,6 +7,8 @@ import SideBarre from './SideBarre';
 import Homme from './Homme';
 import JobForm from '@/app/components/JobForm';
 import UploadCV from '@/app/components/UploadCV';
+import MesCandidats from '@/app/components/CandidateJobList';
+import CandidateJobList from '@/app/components/CandidateJobList';
 
 export default function RecruteurDashboard() {
   const [showNotification, setNotification] = useState(false);
@@ -63,7 +65,7 @@ export default function RecruteurDashboard() {
           {activePage === "homme" && <Homme />}
           {activePage === "profile" && <ProfilPage />}
           {activePage === "cv" && < UploadCV />}
-          {activePage === "candidates" && <div>Candidates Page (placeholder)</div>}
+          {activePage === "candidates" && <CandidateJobList />}
           {/* Ajoute d'autres pages ici selon les boutons de ta sidebar */}
         </div>
 

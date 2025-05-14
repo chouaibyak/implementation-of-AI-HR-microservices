@@ -28,7 +28,7 @@ model = genai.GenerativeModel("gemini-1.5-pro")
 
 # --- Téléchargement du CV via CVService ---
 def download_cv_from_cvservice(filename):
-    url = f"http://localhost:5000/cv/download/{filename}"
+    url = f"http://localhost:5001/cv/download/{filename}"
     local_path = os.path.join(UPLOAD_FOLDER, filename)
     try:
         response = requests.get(url)

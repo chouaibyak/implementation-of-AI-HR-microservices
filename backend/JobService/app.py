@@ -26,7 +26,9 @@ def create_job():
         'description': data.get('description'),
         'company': data.get('company'),
         'location': data.get('location'),
-        'skills': data.get('skills', [])
+        'skills': data.get('skills', []),
+        'recruiter_id': data.get('recruiter_id'),
+        'created_at': firestore.SERVER_TIMESTAMP
     }
     job_ref.set(job_data)
     return jsonify(job_data), 201
