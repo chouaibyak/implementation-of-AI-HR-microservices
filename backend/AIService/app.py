@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
-import os, uuid, requests
+import os, requests
 from dotenv import load_dotenv
 import google.generativeai as genai
 import PyPDF2
 import firebase_admin
 from firebase_admin import credentials, firestore
 from flask_cors import CORS
+import re
 
 # --- Chargement variables d’environnement ---
 load_dotenv()
@@ -24,7 +25,7 @@ print("Firebase initialisé")
 
 # --- Config Gemini ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-pro")
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # --- Téléchargement du CV via CVService ---
 def download_cv_from_cvservice(filename):
@@ -55,10 +56,19 @@ def extract_text_from_pdf(filepath):
 # --- Appel Gemini ---
 def analyze_with_ai(cv_text):
     prompt = f"""
-Analyse le CV suivant et retourne uniquement ces 3 éléments de manière structurée :
-1. Compétences (liste à puces ou séparées par des virgules)
-2. Niveau d'expérience (en une phrase)
-3. Résumé du profil (3-5 phrases max)
+Analyse le CV ci-dessous et retourne les informations dans ce format EXACT :
+
+=== Compétences ===
+- Python
+- JavaScript
+- Django
+...
+
+=== Expérience ===
+X années d'expérience dans le domaine Y.
+
+=== Résumé ===
+Court résumé du profil du candidat en 3 à 5 phrases.
 
 Voici le CV :
 {cv_text}
@@ -71,43 +81,24 @@ Voici le CV :
 
 # --- Parsing du texte Gemini ---
 def parse_analysis(raw_text):
-    skills, experience, summary = [], "", []
-    lines = raw_text.split("\n")
+    print("RAW TEXT FROM GEMINI:\n", raw_text)
 
-    for i, line in enumerate(lines):
-        lower_line = line.lower().strip()
+    skills = re.findall(r"=== Compétences ===\n(.+?)\n=== ", raw_text, re.DOTALL)
+    experience = re.search(r"=== Expérience ===\n(.+?)\n=== ", raw_text, re.DOTALL)
+    summary = re.search(r"=== Résumé ===\n(.+)", raw_text, re.DOTALL)
 
-        # 1. Compétences
-        if ("compétence" in lower_line or "skills" in lower_line) and not skills:
-            # Ligne sous forme : "Compétences : python, SQL, ... "
-            if ":" in line:
-                after_colon = line.split(":", 1)[1]
-                skills = [s.strip(" -•") for s in after_colon.split(",") if s.strip()]
-            # Sinon, lignes suivantes
-            for j in range(i + 1, len(lines)):
-                l = lines[j].strip()
-                if l.startswith(("-", "•")):
-                    skills.append(l.strip(" -•"))
-                elif not l:
-                    break
-
-        # 2. Expérience
-        elif ("expérience" in lower_line or "experience" in lower_line) and not experience:
-            experience = line.strip()
-
-        # 3. Résumé
-        elif len(summary) < 5:
-            if line.strip() and not any(word in lower_line for word in ["compétence", "expérience"]):
-                summary.append(line.strip())
-
-    # Si on n'a pas assez de lignes pour le résumé, on le complète
-    if len(summary) < 3:
-        summary.append("Résumé trop court pour être extrait")
+    skill_list = []
+    if skills:
+        lines = skills[0].splitlines()
+        for line in lines:
+            line = line.strip("-• ").strip()
+            if line:
+                skill_list.append(line)
 
     return {
-        "skills": skills[:10] if skills else ["Aucune détectée"],
-        "experience": experience or "Non précisé",
-        "summary": " ".join(summary[:5])  # Résumé de 3 à 5 phrases
+        "skills": skill_list[:10] if skill_list else ["Aucune détectée"],
+        "experience": experience.group(1).strip() if experience else "Non précisé",
+        "summary": " ".join(summary.group(1).splitlines()).strip() if summary else "Résumé non trouvé"
     }
 
 # --- Route principale ---
@@ -131,6 +122,7 @@ def analyze_from_cvservice():
     parsed = parse_analysis(raw_text)
 
     cv_id = filename.split("_")[0]
+    parsed["cv_id"] = cv_id
     db.collection("cv_analysis").document(cv_id).set(parsed)
 
     return jsonify({
@@ -138,7 +130,6 @@ def analyze_from_cvservice():
         'cv_id': cv_id,
         'parsed_analysis': parsed
     })
-
 
 # --- Lancement ---
 if __name__ == '__main__':

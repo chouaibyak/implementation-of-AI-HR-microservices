@@ -63,5 +63,44 @@ def match_candidate(cv_id, job_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/match_all_jobs/<cv_id>', methods=['GET'])
+def match_all_jobs(cv_id):
+    try:
+        # --- 1. Récupérer les compétences extraites du CV analysé
+        cv_doc = db.collection('cv_analysis').document(cv_id).get()
+        if not cv_doc.exists:
+            return jsonify({'error': 'CV not found'}), 404
+        cv_data = cv_doc.to_dict()
+        candidate_skills = cv_data.get("skills", [])
+
+        # --- 2. Récupérer toutes les offres d’emploi
+        jobs_ref = db.collection('jobs').stream()
+        results = []
+
+        for job_doc in jobs_ref:
+            job_data = job_doc.to_dict()
+            job_id = job_doc.id
+            job_skills = job_data.get("skills", [])
+
+            score = calculate_score(candidate_skills, job_skills)
+
+            match_data = {
+                'cv_id': cv_id,
+                'job_id': job_id,
+                'candidate_skills': candidate_skills,
+                'job_skills': job_skills,
+                'match_score': score
+            }
+
+            # Enregistrer le score dans Firestore
+            db.collection('match_results').document(f'{cv_id}_{job_id}').set(match_data)
+
+            results.append(match_data)
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
-    app.run(port=5003, debug=True)
+    app.run(port=5004, debug=True)

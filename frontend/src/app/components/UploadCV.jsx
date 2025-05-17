@@ -39,6 +39,15 @@ export default function UploadCV() {
 
       // sauvegarde locale de l’analyse
       localStorage.setItem("cv_analysis", JSON.stringify(analyzeResponse.parsed_analysis));
+      localStorage.setItem("last_uploaded_cv", uploadResponse.filename);
+
+      //  MATCH automatique avec toutes les offres
+      setUploadStatus("Analyse terminée ! Calcul des scores de compatibilité...");
+      await fetch(`http://localhost:5004/match_all_jobs/${uploadResponse.filename}`);
+
+      setUploadStatus("Analyse et matching terminés ! Vous pouvez consulter les scores dans les offres.");
+
+
     } catch (error) {
       console.error("Erreur : ", error);
       setUploadStatus("Une erreur est survenue. Veuillez réessayer.");

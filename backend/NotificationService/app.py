@@ -39,4 +39,4 @@ def send_notification():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(port=5004, debug=True)
+    app.run(port=5008, debug=True)

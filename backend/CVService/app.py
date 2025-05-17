@@ -1,8 +1,16 @@
 from flask import Flask, Blueprint, request, jsonify, send_from_directory
 import os
 import uuid
-from flask_cors import CORS  # 👈 import ajouté
+from flask_cors import CORS
+import firebase_admin
+from firebase_admin import credentials, firestore
+from datetime import datetime
 
+
+# Initialiser Firebase une seule fois
+cred = credentials.Certificate("../../firebase/firebase_admin_key.json") 
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 # Création du blueprint
 cv_bp = Blueprint('cv', __name__)
@@ -22,6 +30,15 @@ def upload_cv():
     filename = f"{uuid.uuid4()}_{file.filename}"
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
+
+    #enregistrement dans firestore
+    doc_ref = db.collection('cvs').document()
+    doc_ref.set({
+        'original_filename': file.filename,
+        'saved_filename': filename,
+        'upload_time': datetime.utcnow().isoformat() + 'Z',
+        'user_id': request.form.get('user_id') 
+    })
 
     return jsonify({'message': 'Upload successful', 'filename': filename}), 200
 
