@@ -18,22 +18,37 @@ export default function OffreList() {
         setJobs(jobsData);
 
         const storedCV = localStorage.getItem("last_uploaded_cv");
-        if (!storedCV) return;
+        console.log("CV stocké:", storedCV);
+
+        if (!storedCV) {
+          console.log("Aucun CV trouvé dans le localStorage");
+          return;
+        }
+
+        // Extraire l'ID du CV du nom du fichier (première partie avant le premier underscore)
+        const cvId = storedCV.split("_")[0];
+        console.log("ID du CV extrait:", cvId);
 
         const scores = {};
         for (const job of jobsData) {
           try {
-            const scoreRes = await fetch(`http://localhost:5004/match/${storedCV}/${job.id}`);
+            console.log(`Récupération du score pour le job ${job.id} avec le CV ${cvId}`);
+            const scoreRes = await fetch(`http://localhost:5004/match/${cvId}/${job.id}`);
             const matchData = await scoreRes.json();
+
             if (scoreRes.ok) {
+              console.log(`Score trouvé pour le job ${job.id}:`, matchData.match_score);
               scores[job.id] = matchData.match_score;
             } else {
-              scores[job.id] = null;  // Pas de score ou erreur
+              console.error(`Erreur de matching pour le job ${job.id}:`, matchData.error);
+              scores[job.id] = null;
             }
           } catch (e) {
-            console.error("Erreur lors du matching:", e);
+            console.error(`Erreur lors du matching pour le job ${job.id}:`, e);
+            scores[job.id] = null;
           }
         }
+        console.log("Scores finaux:", scores);
         setMatchScores(scores);
       } catch (err) {
         console.error('Erreur lors de la récupération des offres:', err);
@@ -51,14 +66,14 @@ export default function OffreList() {
     const currentUser = auth.currentUser;
 
     if (!storedCV && !selectedFile) {
-      alert("Veuillez d'abord déposer votre CV via l’onglet 'Déposez votre CV'");
+      alert("Veuillez d'abord déposer votre CV via l'onglet 'Déposez votre CV'");
       return;
     }
 
     try {
       const filenameToUse = storedCV;
       if (!filenameToUse) {
-        alert("Veuillez d'abord déposer votre CV via l’onglet 'Déposez votre CV'");
+        alert("Veuillez d'abord déposer votre CV via l'onglet 'Déposez votre CV'");
         return;
       }
 
@@ -90,33 +105,34 @@ export default function OffreList() {
         </p>
       )}
 
-
-
       <div className="grid gap-4">
-        {jobs.map(job => (
-          <div key={job.id} className="border p-4 rounded shadow">
-            <h3 className="text-xl font-bold">{job.title}</h3>
-            <p>{job.company} - {job.location}</p>
-            <p className="my-2">{job.description}</p>
+        {jobs
+          .sort((a, b) => {
+            const scoreA = matchScores[a.id] ?? -1; // -1 pour mettre les scores null à la fin
+            const scoreB = matchScores[b.id] ?? -1;
+            return scoreB - scoreA; // Tri décroissant
+          })
+          .map(job => (
+            <div key={job.id} className="border p-4 rounded shadow">
+              <h3 className="text-xl font-bold">{job.title}</h3>
+              <p>{job.company} - {job.location}</p>
+              <p className="my-2">{job.description}</p>
 
-            {matchScores[job.id] !== undefined && (
-              <p className="text-green-700 font-semibold">
-                Score de compatibilité : {matchScores[job.id] ?? 'Non disponible'}%
-              </p>
-            )}
+              {matchScores[job.id] !== undefined && (
+                <p className={`font-semibold ${matchScores[job.id] >= 70 ? 'text-green-700' : matchScores[job.id] >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  Score de compatibilité : {matchScores[job.id] ?? 'Non disponible'}%
+                </p>
+              )}
 
-            <button
-              onClick={() => handleApply(job.id, job.title)}
-              className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
-            >
-              Postuler
-            </button>
-          </div>
-        ))}
-
-
+              <button
+                onClick={() => handleApply(job.id, job.title)}
+                className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
+              >
+                Postuler
+              </button>
+            </div>
+          ))}
       </div>
-
     </div>
   );
 }

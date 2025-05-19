@@ -32,21 +32,35 @@ export default function UploadCV() {
       setUploadStatus(" CV bien uploadé. Analyse en cours...");
 
       const analyzeResponse = await apiCV.analyzeCV(uploadResponse.filename);
-      console.log(analyzeResponse);
+      console.log("Analyse du CV terminée:", analyzeResponse);
 
       setUploadStatus("Analyse terminée !");
       setAnalysis(analyzeResponse.parsed_analysis);
 
-      // sauvegarde locale de l’analyse
+      // Extraire l'ID du CV du nom du fichier (première partie avant le premier underscore)
+      const cvId = uploadResponse.filename.split("_")[0];
+      console.log("ID du CV extrait:", cvId);
+
+      // sauvegarde locale de l'analyse
       localStorage.setItem("cv_analysis", JSON.stringify(analyzeResponse.parsed_analysis));
-      localStorage.setItem("last_uploaded_cv", uploadResponse.filename);
+      localStorage.setItem("last_uploaded_cv", cvId);
+      console.log("CV ID stocké:", cvId);
 
-      //  MATCH automatique avec toutes les offres
+      // MATCH automatique avec toutes les offres
       setUploadStatus("Analyse terminée ! Calcul des scores de compatibilité...");
-      await fetch(`http://localhost:5004/match_all_jobs/${uploadResponse.filename}`);
-
-      setUploadStatus("Analyse et matching terminés ! Vous pouvez consulter les scores dans les offres.");
-
+      try {
+        const matchResponse = await fetch(`http://localhost:5004/match_all_jobs/${cvId}`);
+        if (!matchResponse.ok) {
+          const errorData = await matchResponse.json();
+          throw new Error(errorData.error || "Erreur lors du matching");
+        }
+        const matchData = await matchResponse.json();
+        console.log("Résultats du matching:", matchData);
+        setUploadStatus("Analyse et matching terminés ! Vous pouvez consulter les scores dans les offres.");
+      } catch (matchError) {
+        console.error("Erreur lors du matching:", matchError);
+        setUploadStatus("Analyse terminée mais erreur lors du calcul des scores. Veuillez réessayer.");
+      }
 
     } catch (error) {
       console.error("Erreur : ", error);
