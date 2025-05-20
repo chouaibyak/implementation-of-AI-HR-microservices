@@ -9,6 +9,7 @@ import JobForm from '@/app/components/JobForm';
 import UploadCV from '@/app/components/UploadCV';
 import MesCandidats from '@/app/components/OffreList';
 import OffreList from '@/app/components/OffreList';
+import MesCandidatures from '@/app/components/MesCandidatures';
 
 export default function RecruteurDashboard() {
   const [showNotification, setNotification] = useState(false);
@@ -66,6 +67,7 @@ export default function RecruteurDashboard() {
           {activePage === "profile" && <ProfilPage />}
           {activePage === "cv" && < UploadCV />}
           {activePage === "offre" && <OffreList />}
+          {activePage === "candidature" && <MesCandidatures />}
           {/* Ajoute d'autres pages ici selon les boutons de ta sidebar */}
         </div>
 

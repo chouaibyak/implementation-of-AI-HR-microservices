@@ -13,14 +13,14 @@ export default function JobForm() {
     skills: '',
     title: ''
   });
-
   const [errors, setErrors] = useState({});
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const inputRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setJobValue((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: '' })); // Reset error when typing
+    setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -45,7 +45,7 @@ export default function JobForm() {
       if (!currentUser || !currentUser.displayName) {
         console.error("Aucun recruteur connecté ou nom non défini.");
         return;
-      };
+      }
 
       const jobToSend = {
         ...jobValue,
@@ -53,9 +53,9 @@ export default function JobForm() {
         recruiter_id: currentUser.uid
       };
 
+      const response = await apiJob.post('/jobs', jobToSend);
 
-      await apiJob.post('/jobs', jobToSend);
-      setShowForm(false);
+      // Si on arrive ici, c'est que la création a réussi
       setJobValue({
         company: '',
         description: '',
@@ -64,8 +64,14 @@ export default function JobForm() {
         title: ''
       });
       setErrors({});
+      setShowForm(false);
+
+      // Déclencher le rafraîchissement de la liste
+      setRefreshTrigger(prev => prev + 1);
+
     } catch (error) {
       console.error('Erreur lors de la création du job:', error);
+      setErrors({ submit: 'Une erreur est survenue lors de la création du job.' });
     }
   };
 
@@ -91,7 +97,7 @@ export default function JobForm() {
 
       {/* Background content placeholder */}
       <div className={`p-6 transition-all duration-300 ${showForm ? 'pointer-events-none' : ''}`}>
-        <JobList />
+        <JobList key={refreshTrigger} />
       </div>
 
       {/* Form Overlay */}

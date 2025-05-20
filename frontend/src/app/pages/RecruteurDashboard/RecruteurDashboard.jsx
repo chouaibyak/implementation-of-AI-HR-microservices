@@ -6,6 +6,7 @@ import Notificationbarre from './Notificationbarre';
 import SideBarre from './SideBarre';
 import Homme from './Homme';
 import JobForm from '@/app/components/JobForm';
+import CandidateRectruteur from '@/app/components/CandidateRectruteur';
 
 export default function RecruteurDashboard() {
   const [showNotification, setNotification] = useState(false);
@@ -62,7 +63,7 @@ export default function RecruteurDashboard() {
           {activePage === "homme" && <Homme />}
           {activePage === "profile" && <ProfilPage />}
           {activePage === "jobs" && < JobForm />}
-          {activePage === "candidates" && <div>Candidates Page (placeholder)</div>}
+          {activePage === "candidates" && <CandidateRectruteur />}
           {/* Ajoute d'autres pages ici selon les boutons de ta sidebar */}
         </div>
 

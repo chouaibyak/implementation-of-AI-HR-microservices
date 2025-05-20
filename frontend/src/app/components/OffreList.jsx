@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import apiJob from '../services/api/apiJob';
 import apiApplication from '../services/api/apiApplication';
-import apiCV from '../services/api/apiCV';
 import { auth } from '../firebase';
 
 export default function OffreList() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [matchScores, setMatchScores] = useState({});
-
 
   useEffect(() => {
     const fetchJobsAndScores = async () => {
@@ -60,12 +58,11 @@ export default function OffreList() {
     fetchJobsAndScores();
   }, []);
 
-
   const handleApply = async (jobId, jobTitle) => {
     const storedCV = localStorage.getItem("last_uploaded_cv");
     const currentUser = auth.currentUser;
 
-    if (!storedCV && !selectedFile) {
+    if (!storedCV) {
       alert("Veuillez d'abord déposer votre CV via l'onglet 'Déposez votre CV'");
       return;
     }
@@ -92,8 +89,7 @@ export default function OffreList() {
     }
   };
 
-
-  if (loading) return <p>Chargement...</p>;
+  if (loading) return <p className="text-center mt-10">Chargement des offres...</p>;
 
   return (
     <div className="p-6 mt-20">
@@ -105,31 +101,37 @@ export default function OffreList() {
         </p>
       )}
 
-      <div className="grid gap-4">
+      <div className="space-y-4">
         {jobs
           .sort((a, b) => {
-            const scoreA = matchScores[a.id] ?? -1; // -1 pour mettre les scores null à la fin
+            const scoreA = matchScores[a.id] ?? -1;
             const scoreB = matchScores[b.id] ?? -1;
-            return scoreB - scoreA; // Tri décroissant
+            return scoreB - scoreA;
           })
           .map(job => (
-            <div key={job.id} className="border p-4 rounded shadow">
-              <h3 className="text-xl font-bold">{job.title}</h3>
-              <p>{job.company} - {job.location}</p>
-              <p className="my-2">{job.description}</p>
+            <div key={job.id} className="border p-4 rounded-lg shadow-sm bg-white">
+              <div className="flex flex-col">
+                <div>
+                  <h3 className="text-xl font-bold text-blue-700">{job.title}</h3>
+                  <p className="text-gray-700">{job.company} - {job.location}</p>
+                  <p className="text-gray-600 mt-2">{job.description}</p>
+                </div>
 
-              {matchScores[job.id] !== undefined && (
-                <p className={`font-semibold ${matchScores[job.id] >= 70 ? 'text-green-700' : matchScores[job.id] >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-                  Score de compatibilité : {matchScores[job.id] ?? 'Non disponible'}%
-                </p>
-              )}
+                <div className="mt-4">
+                  {matchScores[job.id] !== undefined && (
+                    <p className={`font-semibold ${matchScores[job.id] >= 70 ? 'text-green-700' : matchScores[job.id] >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                      Score de compatibilité : {matchScores[job.id] ?? 'Non disponible'}%
+                    </p>
+                  )}
 
-              <button
-                onClick={() => handleApply(job.id, job.title)}
-                className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
-              >
-                Postuler
-              </button>
+                  <button
+                    onClick={() => handleApply(job.id, job.title)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mt-2"
+                  >
+                    Postuler
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
       </div>

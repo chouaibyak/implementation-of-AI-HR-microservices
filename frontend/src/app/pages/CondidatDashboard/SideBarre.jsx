@@ -21,7 +21,7 @@ export default function SideBarre({ onNavigate }) {
       <ul>
         <li onClick={() => onNavigate("homme")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><Home size={18} /> Home</li>
         <li onClick={() => onNavigate("cv")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><FileUser size={18} /> Mon CV</li>
-        <li onClick={() => onNavigate("candidate")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><Users size={18} /> Mes candidatures</li>
+        <li onClick={() => onNavigate("candidature")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><Users size={18} /> Mes candidatures</li>
       </ul>
 
       {/* Second group */}
